@@ -1,120 +1,132 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { FaPlay, FaPause, FaHeart, FaShare } from "react-icons/fa";
 
-// Helper function to convert a date to a "time ago" string
-const timeAgo = (date) => {
-  const seconds = Math.floor((new Date() - new Date(date)) / 1000);
-  let interval = seconds / 31536000;
-  if (interval > 1) return Math.floor(interval) + "y ago";
-  interval = seconds / 2592000;
-  if (interval > 1) return Math.floor(interval) + "m ago";
-  interval = seconds / 86400;
-  if (interval > 1) return Math.floor(interval) + "d ago";
-  interval = seconds / 3600;
-  if (interval > 1) return Math.floor(interval) + "h ago";
-  interval = seconds / 60;
-  if (interval > 1) return Math.floor(interval) + "m ago";
-  return Math.floor(seconds) + "s ago";
+// Helper function to convert seconds to MM:SS format
+const formatTime = (time) => {
+  const minutes = Math.floor(time / 60);
+  const seconds = Math.floor(time % 60);
+  return `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
 };
 
-const ConfessionPost = ({ confession, currentUser ,onPlay  }) => {
+const ConfessionPost = ({ confession, currentUser, onPlay }) => {
   const navigate = useNavigate();
   const [isExpanded, setIsExpanded] = useState(false);
+  const [currentTime, setCurrentTime] = useState(0);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const audioRef = useRef(null);
 
+  // Toggle Caption View
   const toggleCaption = () => {
     setIsExpanded(!isExpanded);
   };
-  console.log("onPlay Type:", typeof onPlay); // Debugging
-  const handlePlay = () => {
-    if (typeof onPlay === "function") {
-      onPlay(confession._id); // Ensure it's a function before calling
+
+  // Handle Play/Pause and Update Time
+  const handlePlayPause = () => {
+    if (audioRef.current) {
+      if (isPlaying) {
+        audioRef.current.pause();
+      } else {
+        audioRef.current.play();
+        if (typeof onPlay === "function") {
+          onPlay(confession._id);
+        }
+      }
+      setIsPlaying(!isPlaying);
     }
   };
-  
+
+  // Update Current Time While Playing
+  const handleTimeUpdate = () => {
+    if (audioRef.current) {
+      setCurrentTime(audioRef.current.currentTime);
+    }
+  };
 
   return (
-    <div className="w-full pt-5 flex flex-col justify-center items-center">
-      <div className="w-[400px] bg-[#F8F9FA] rounded-lg border border-[#DDDFE4] flex flex-col justify-center items-center overflow-hidden">
+    <div className="w-full pb-5 flex flex-col justify-center items-center">
+      <div className="w-[400px] bg-[#2C2F33] text-white rounded-lg border border-[#444A50] shadow-lg flex flex-col justify-center items-center overflow-hidden">
         
         {/* Header Section */}
         <div className="w-full h-[86px] px-4 flex justify-between items-center">
-          <div className="flex items-center gap-[21px]">
-            <div className="profilePic w-[50px] h-[50px] bg-[#1A1E25] rounded-full flex justify-center items-center"></div>
-            <div className="UserName/Time w-[290px] h-[20px] flex gap-2 rounded-md">
-              <p className="text-black font-semibold">Anonymous</p>
-              {confession?.createdAt && (
-                <div className="time tracking-tighter text-sm">...{timeAgo(confession.createdAt)}</div>
-              )}
+          <div className="flex items-center gap-[15px]">
+            <div className="profilePic w-[50px] h-[50px] bg-[#7289DA] rounded-full flex justify-center items-center"></div>
+            <div className="UserName/Time flex flex-col">
+              <p className="font-semibold text-sm">anonymous</p>
+              <p className="text-gray-400 text-sm"> {confession?.createdAt ? new Date(confession.createdAt).toLocaleDateString() : ""}</p>
             </div>
           </div>
         </div>
 
         {/* Audio Section */}
-        <div className="w-full flex flex-col gap-2 p-5 bg-[#795458] justify-center items-center">
-          <h5>{confession?.title}</h5>
-          <div className="w-full flex flex-col gap-5 justify-center items-center">
-            
-            {/* Audio Player */}
-            <div className="w-40 h-40 bg-slate-300 flex justify-center items-center">
-              {confession?.audio ? (
-                <audio controls  onPlay={handlePlay}  className="w-full">
-                  <source src={confession.audio} type="audio/mpeg" />
-                   {/*// Increment count on play */}
-                  {/* Your browser does not support the audio tag. */}
-                </audio>
-              ) : (
-                <p className="text-white">No audio available</p>
-              )} 
-            </div>
+        <div className="w-full flex flex-col p-5 bg-[#3A3F44] justify-center items-center rounded-lg">
+          <h5 className="text-xl font-semibold">{confession?.title}</h5>
+          
+          {/* Custom Audio Player */}
+          <div className="w-full flex flex-col gap-2 justify-center items-center">
+            {confession?.audio ? (
+              <div className="w-56 flex items-center gap-4 mt-3">
+                {/* Play/Pause Button */}
+                <button onClick={handlePlayPause} className="text-white text-2xl">
+                  {isPlaying ? <FaPause /> : <FaPlay />}
+                </button>
 
-            {/* Audio Waveform / Progress Bar Placeholder */}
-            <div className="w-5/6 h-10 bg-slate-300"></div>
+                {/* Progress Bar */}
+                <input
+                  type="range"
+                  className="w-40 accent-[#7289DA]"
+                  min="0"
+                  max={audioRef.current?.duration || 0}
+                  value={currentTime}
+                  onChange={(e) => audioRef.current.currentTime = e.target.value}
+                />
+
+                {/* Timer */}
+                <p className="text-sm">{formatTime(currentTime)}</p>
+              </div>
+            ) : (
+              <p className="text-white">No audio available</p>
+            )}
+            {/* Hidden Audio Element */}
+            <audio
+              ref={audioRef}
+              src={confession.audio}
+              onTimeUpdate={handleTimeUpdate}
+            />
           </div>
 
           {/* Caption / Summary */}
-          <p
-            className={`relative text-sm caption tracking-tighter ${
-              isExpanded ? 'h-auto' : 'overflow-hidden h-24'
-            }`}
-            style={{ transition: 'height 0.3s ease' }}
-          >
+          <p className={`relative text-sm tracking-tighter mt-3 ${isExpanded ? 'h-auto' : 'overflow-hidden h-16'}`}>
             {confession?.summary}
           </p>
-          <button className="text-zinc-800 text-sm tracking-tighter" onClick={toggleCaption}>
+          <button className="text-blue-400 text-sm tracking-tighter mt-2" onClick={toggleCaption}>
             {isExpanded ? 'View Less' : 'View More'}
           </button>
         </div>
 
         {/* Comment Section */}
-        <div className="w-full flex flex-col px-4">
+        <div className="w-full flex flex-col px-4 py-3">
           {/* Buttons Section */}
-          <div className="w-full flex justify-between pt-4 pb-0">
-            <button className="like w-[35px] h-[35px] bg-[#E6EAED] rounded-full"></button>
-            <div className="flex gap-[32px]">
-              <div className="mt-0 w-fit flex gap-1 pt-1 font-semibold justify-center items-baseline">
-                <p>{confession.plays||0}</p> 
-                <p className="font-semibold text-sm tracking-tighter">plays</p>
-              </div>
-            </div>
-            <button className="share w-[35px] h-[35px] bg-[#E6EAED] rounded-full"></button>
+          <div className="w-full flex justify-between items-center">
+            <button className="text-[#E74C3C] text-lg"><FaHeart /></button>
+            <p className="text-sm font-semibold">{confession.plays || 0} Plays</p>
+            <button className="text-[#3498DB] text-lg"><FaShare /></button>
           </div>
 
           {/* Comment & Solutions Section */}
           <div className="flex flex-col pt-3 pb-[10px]">
-            <div className="w-full flex flex-col gap-1 justify-center items-center">
-              <button
-                className="text-zinc-800 text-sm tracking-tighter"
-                onClick={() => navigate('/profile/confessions/comments', { state: { confessionId: confession._id } })}
-              >
-                Give them a solution
-              </button>
-              <button
-                className="text-zinc-800 text-sm tracking-tighter"
-                onClick={() => navigate('/profile/confessions/comments', { state: { confessionId: confession._id } })}
-              >
-                View all solutions
-              </button>
-            </div>
+            <button
+              className="text-blue-400 text-sm tracking-tighter"
+              onClick={() => navigate('/profile/confessions/comments', { state: { confessionId: confession._id } })}
+            >
+              Give them a solution
+            </button>
+            <button
+              className="text-blue-400 text-sm tracking-tighter"
+              onClick={() => navigate('/profile/confessions/comments', { state: { confessionId: confession._id } })}
+            >
+              View all solutions
+            </button>
           </div>
         </div>
       </div>

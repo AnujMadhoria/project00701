@@ -5,7 +5,7 @@ import cookieParser from "cookie-parser"
 const app = express()                    
 
 app.use(cors({
-    origin: 'http://localhost:5175', 
+    origin: 'http://localhost:5173', 
     credentials: true
 }))
 
@@ -18,7 +18,7 @@ app.use(cookieParser())
 import userRouter from "./routes/user.route.js"
 import storyRouter from "./routes/story.route.js"
 import confessionRouter from "./routes/confession.route.js"
-// import songRouter from "./routes/song.route.js"
+// import songRouter from "./routes/song.route.js" 
 import problemRouter from "./routes/problem.route.js"
 //routes declaration
 app.use("/api/v1/user", userRouter)
@@ -26,8 +26,8 @@ app.use("/api/v1/story", storyRouter)
 // app.use("/api/v1/song", songRouter)
 app.use("/api/v1/confession", confessionRouter)
 app.use("/api/v1/problem", problemRouter)
+ 
 
-
-// http://localhost:8000/api/v1/users/register
-
-export { app }
+// http://localhost:8000/api/v1/users/register 
+ 
+export { app } 

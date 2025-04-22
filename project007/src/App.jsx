@@ -20,6 +20,7 @@ import ProblemFeed from './components/ProblemFeed';
 import  { useState } from 'react';
 import ConfessionFeed from './components/ConfessionFeed'
 import SearchButton from './components/SearchButton'
+import SearchingPage from './components/SearchingPage'
 
 
 
@@ -49,28 +50,28 @@ const App = () => {
 
          <Route path='/user_id' element={<Profilepage />}></Route> 
          <Route path='/profile/prblms' element={
-            <>
+           <div className="bg-[#a1a1a1] min-h-screen">
             <MainNavbar />
             <ChoicesNavbar />
             <ProblemFeed key={feedKey} />
             <PostButton />
             <DmButton />
             <SearchButton/>
-            </>
+            </div>
          }></Route>
 
-        <Route path='/profile/confessions' element={
-            <>
-            <MainNavbar />
-            <ChoicesNavbar />
-            <ConfessionFeed key={feedKey} />
-            <PostButton />
-            <DmButton />
-            <SearchButton/>
-            </>
+        <Route path='/profile/confessions'  element={
+           <div className="bg-[#a1a1a1] min-h-screen">
+           <MainNavbar />
+           <ChoicesNavbar />
+           <ConfessionFeed key={feedKey} />
+           <PostButton />
+           <DmButton />
+           <SearchButton />
+         </div>
         }></Route>
 
-
+         <Route path='/profile/searchprofiles' element={<SearchingPage />}></Route> 
          <Route path='/profile/comments' element={<OpenComments />}></Route>
          <Route path='/profile/confessions/comments' element={<OpenConfessionCmnts />}></Route>
          <Route path='/profile/prblms/comments' element={<OpenPrblmCmnts />}></Route>

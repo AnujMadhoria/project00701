@@ -19,7 +19,8 @@ import {
     removeStory,
     removeConfession,
     removeProblem,
-    removeSong
+    removeSong,
+    searchUsers
 } from "../controllers/user.controller.js";
 import {upload} from "../middlewares/multer.middleware.js"
 import { verifyJWT } from "../middlewares/auth.middleware.js";
@@ -44,6 +45,9 @@ router.route("/change-password").post(verifyJWT, changeCurrentPassword)
 router.route("/current-user").get(verifyJWT, getCurrentUser)
 router.route("/update-account").patch(verifyJWT, updateAccountDetails)
 router.route("/image").patch(verifyJWT, upload.single("image"), updateUserImage)
+
+router.route("/search").get(verifyJWT, searchUsers);
+
 
 router.route('/userstory').post(verifyJWT,getUserStory)
 router.route('/new-story').post(verifyJWT,upload.single("audio"),addStory) 

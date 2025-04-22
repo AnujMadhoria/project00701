@@ -50,6 +50,10 @@ const userSchema = new Schema(
     }
 )
 
+// Indexing for efficient text search on username and fullName
+userSchema.index({ username: "text", fullName: "text" });
+
+
 userSchema.pre("save", async function (next) {
     if(!this.isModified("password")) return next();
 

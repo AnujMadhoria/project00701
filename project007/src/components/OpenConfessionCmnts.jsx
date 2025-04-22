@@ -8,8 +8,8 @@ const OpenConfessionCmnts = () => {
   const [comments, setComments] = useState([]); // Store fetched comments
   const navigate = useNavigate();
   const location = useLocation();
-  const commentInputRef = useRef(null); // Ref for input focus
-  const commentsEndRef = useRef(null); // Ref for auto-scrolling
+  const commentInputRef = useRef(null);
+  const commentsEndRef = useRef(null);
 
   // Extract confession ID from the URL state
   const confessionId = location.state?.confessionId;
@@ -31,10 +31,10 @@ const OpenConfessionCmnts = () => {
             body: JSON.stringify({ confessionId }),
           }
         );
-    
+
         if (response.ok) {
           const result = await response.json();
-          setComments(result.data || []);  // **Fix: Use `result.data` instead of `result.comments`**
+          setComments(result.data || []);
         } else {
           console.error("Failed to fetch comments");
         }
@@ -42,19 +42,16 @@ const OpenConfessionCmnts = () => {
         console.error("Error fetching comments:", error);
       }
     };
-    
 
     fetchComments();
   }, [confessionId]);
 
- 
   useEffect(() => {
     if (commentInputRef.current) {
       commentInputRef.current.focus();
     }
   }, []);
 
-  // Scroll to latest comment
   useEffect(() => {
     commentsEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [comments]);
@@ -66,13 +63,9 @@ const OpenConfessionCmnts = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log("Submit button clicked!"); // DEBUG CHECK
-  
+
     if (!comment.trim() || !confessionId) return;
-    console.log("Comment:", comment);
-    console.log("Confession ID:", confessionId);
     setIsLoading(true);
-   
 
     try {
       const response = await fetch(
@@ -84,14 +77,14 @@ const OpenConfessionCmnts = () => {
             "Content-Type": "application/json",
             Authorization: `Bearer ${localStorage.getItem("token")}`,
           },
-          body: JSON.stringify({ description: comment, confessionId }),  // **Fix: Use `description` instead of `comment`**
+          body: JSON.stringify({ description: comment, confessionId }),
         }
       );
 
       if (response.ok) {
         const result = await response.json();
-        setComments((prev) => [...prev, result.data]); // Update UI
-        setComment(""); // Clear input field
+        setComments((prev) => [...prev, result.data]);
+        setComment("");
         setIsWritten(false);
       } else {
         console.error("Failed to post comment");
@@ -100,83 +93,79 @@ const OpenConfessionCmnts = () => {
       console.error("Error while commenting:", error);
     }
     setIsLoading(false);
-};
-
+  };
 
   return (
-    <div className="w-full h-screen flex items-center justify-center bg-gray-900">
-      <div className="Openpostcard w-2/3 h-5/6 bg-gray-50 rounded-2xl border border-zinc-200 flex flex-col overflow-hidden">
+    <div className="w-full h-screen flex items-center justify-center bg-gray-900 px-2 sm:px-4">
+      <div className="w-full max-w-[90%] sm:max-w-[75%] md:max-w-[65%] lg:max-w-[50%] h-[90vh] sm:h-[85vh] bg-gray-50 rounded-2xl border border-zinc-200 flex flex-col overflow-hidden">
+        
         {/* Header */}
-        <div className="Headerpost flex justify-between items-center p-4 bg-gray-200">
-          <div className="Profiletag flex items-center gap-5">
-            <div className="ProfilePicture w-14 h-14 bg-gray-400 rounded-full"></div>
-            <div className="Username w-32 h-6 bg-gray-300 rounded-full"></div>
+        <div className="flex justify-between items-center p-4 bg-gray-200">
+          <div className="flex items-center gap-3">
+            <div className="w-12 h-12 bg-gray-400 rounded-full"></div>
+            <div className="text-sm sm:text-base font-semibold text-gray-700">Username</div>
           </div>
           <button
             onClick={() => navigate("/profile/confessions")}
-            className="text-gray-700 hover:text-gray-900 transition"
+            className="text-gray-700 hover:text-gray-900 transition text-xs sm:text-sm"
           >
-            Back to post
+            Back
           </button>
         </div>
 
-        {/* Comments Display Area */}
-        <div className="h-96 px-4 py-2 bg-gray-100 flex flex-col overflow-y-auto">
-        {comments.length > 0 ? (
-  comments.map((cmnt) => (
-    <div key={cmnt._id} className="p-3 bg-white rounded-lg mb-2 shadow-md">
-      <div className="flex items-center gap-3">
-      <div className="w-10 h-10 bg-gray-300 rounded-full overflow-hidden">
-            {cmnt.byUser?.image ? (
-              <img
-                src={cmnt.byUser.image}
-                alt={cmnt.byUser.username}
-                className="w-full h-full object-cover"
-              />
-            ) : (
-              <div className="w-full h-full flex items-center justify-center bg-gray-500 text-white text-xs rounded-full">
-                {cmnt.byUser?.username?.charAt(0).toUpperCase() || "U"}
+        {/* Comments Section */}
+        <div className="flex-1 px-4 py-2 bg-gray-100 overflow-y-auto">
+          {comments.length > 0 ? (
+            comments.map((cmnt) => (
+              <div key={cmnt._id} className="p-3 bg-white rounded-lg mb-2 shadow-md">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-gray-300 rounded-full overflow-hidden">
+                    {cmnt.byUser?.image ? (
+                      <img
+                        src={cmnt.byUser.image}
+                        alt={cmnt.byUser.username}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center bg-gray-500 text-white text-xs rounded-full">
+                        {cmnt.byUser?.username?.charAt(0).toUpperCase() || "U"}
+                      </div>
+                    )}
+                  </div>
+                  <div className="text-sm font-semibold text-gray-800">
+                    {cmnt.byUser?.username || "User"}
+                  </div>
+                </div>
+                <p className="text-gray-700 mt-1">{cmnt.description}</p>
               </div>
-            )}
-          </div>
-        <div className="text-sm font-semibold">
-          {cmnt.byUser?.username || "User"}  {/* Ensure username displays */}
-        </div>
-      </div>
-      <p className="text-gray-700 mt-1">{cmnt.description}</p> {/* Fix this */}
-    </div>
-  ))
-) : (
-  <p className="text-gray-500 text-center">No comments yet.</p>
-)}
-
+            ))
+          ) : (
+            <p className="text-gray-500 text-center">No comments yet.</p>
+          )}
           <div ref={commentsEndRef} />
         </div>
 
         {/* Comment Input Section */}
-        <div className="p-2.5 bg-white border-t">
-          <form  className="flex gap-2" onSubmit={handleSubmit}>
+        <div className="p-3 bg-white border-t flex gap-2">
           <input
-  type="text"  // Fix type
-  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400"
-  placeholder="Write a comment..."
-  name="comment"
-  value={comment}
-  onChange={handleInputChange}
-  required
-  disabled={isLoading}
-/>
-<button
-  type="submit"  // Fix type
-  className={`text-sm px-4 py-2 rounded-md transition ${
-    isLoading ? "bg-gray-400 text-gray-200 cursor-not-allowed" : "bg-blue-500 text-white hover:bg-blue-600"
-  }`}
-  disabled={!isWritten || isLoading}
->
-  {isLoading ? "Posting..." : "Post"}
-</button>
-
-          </form>
+            type="text"
+            className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+            placeholder="Write a comment..."
+            value={comment}
+            onChange={handleInputChange}
+            required
+            disabled={isLoading}
+          />
+          <button
+            type="submit"
+            onClick={handleSubmit}
+            className={`text-sm px-4 py-2 rounded-md transition ${
+              isLoading ? "bg-gray-400 text-gray-200 cursor-not-allowed" : "bg-blue-500 text-white hover:bg-blue-600"
+            }`}
+            disabled={!isWritten || isLoading}
+          >
+            {isLoading ? "Posting..." : "Post"}
+          </button>
         </div>
       </div>
     </div>

@@ -38,7 +38,6 @@ const generateAccessAndRefereshTokens = async (userId) => {
     }
 }
 
-
 const registerUser = asyncHandler( async (req, res) => {
     // get user details from frontend
     // validation - not empty
@@ -97,63 +96,54 @@ const registerUser = asyncHandler( async (req, res) => {
 
 } )
 
-const loginUser = asyncHandler(async (req, res) =>{
-    // req body -> data
-    // username or email
-    //find the user
-    //password check
-    //access and referesh token
-    //send cookie
-
-    const {email, username, password} = req.body
-    
-    // if (!username && !email) {
-    //     throw new ApiError(400, "username or email is required")
-    // }
-    
-    // Here is an alternative of above code based on logic discussed in video:
+const loginUser = asyncHandler(async (req, res) => {
+    const { email, username, password } = req.body;
+  
     if (!(username || email)) {
-        throw new ApiError(400, "username or email is required")
+      throw new ApiError(400, "Username or email is required");
     }
-
+  
     const user = await User.findOne({
-        $or: [{username}, {email}]
-    })
-
+      $or: [{ username }, { email }],
+    });
+  
     if (!user) {
-        throw new ApiError(404, "User does not exist")
+      throw new ApiError(404, "User does not exist");
     }
-
-   const isPasswordValid = await user.isPasswordCorrect(password)
-
-   if (!isPasswordValid) {
-    throw new ApiError(401, "Invalid user credentials")
+  
+    const isPasswordValid = await user.isPasswordCorrect(password);
+  
+    if (!isPasswordValid) {
+      throw new ApiError(401, "Invalid user credentials");
     }
-
-   const {accessToken, refreshToken} = await generateAccessAndRefereshTokens(user._id)
-
-    const loggedInUser = await User.findById(user._id).select("-password -refreshToken")
-
+  
+    const { accessToken, refreshToken } = await generateAccessAndRefereshTokens(user._id);
+  
+    const loggedInUser = await User.findById(user._id).select("-password -refreshToken");
+  
+    // ✅ Fixed cookie options for cross-origin requests
     const options = {
-        httpOnly: true,
-        secure: true
-    }
-
+      httpOnly: true,
+      secure: true,         // Must be true when SameSite is 'None'
+      sameSite: "None",     // Required for cross-origin cookies
+    };
+  
     return res
-    .status(200)
-    .cookie("accessToken", accessToken, options)
-    .cookie("refreshToken", refreshToken, options)
-    .json(
+      .status(200)
+      .cookie("accessToken", accessToken, options)
+      .cookie("refreshToken", refreshToken, options)
+      .json(
         new ApiResponse(
-            200, 
-            {
-                user: loggedInUser, accessToken, refreshToken
-            },
-            "User logged In Successfully"
+          200,
+          {
+            user: loggedInUser,
+            accessToken,
+            refreshToken,
+          },
+          "User logged in successfully"
         )
-    )
-
-})
+      );
+  });
 
 const logoutUser = asyncHandler(async(req, res) => {
     await User.findByIdAndUpdate(
@@ -602,9 +592,27 @@ const removeSong = asyncHandler (async(req,res)=>{
     )
 })
 
+const searchUsers = asyncHandler(async (req, res) => {
+    const { query } = req.query;
+
+    if (!query) {
+        throw new ApiError(400, "Search query is required");
+    }
+
+    // Perform search based on username or fullName
+    const users = await User.find({
+        $or: [
+            { username: { $regex: query, $options: "i" } },
+            { fullName: { $regex: query, $options: "i" } }
+        ]
+    }).select("fullName username image");
+
+    return res.status(200).json(new ApiResponse(200, users, "Users fetched successfully"));
+});
+
 export {
     registerUser,
-    loginUser,
+    loginUser, 
     logoutUser,
     refreshAccessToken,
     changeCurrentPassword,
@@ -622,5 +630,6 @@ export {
     removeStory,
     removeConfession,
     removeProblem,
-    removeSong
+    removeSong,
+    searchUsers
 }

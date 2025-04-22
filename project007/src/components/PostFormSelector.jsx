@@ -76,6 +76,8 @@ const PostFormSelector = ({ onPostCreated }) => {
             body: formData,
           }
         );
+        console.log("Token being sent:", localStorage.getItem("token"));
+
   
         if (response.ok) {
           onPostCreated();
@@ -90,7 +92,9 @@ const PostFormSelector = ({ onPostCreated }) => {
           {
             method: "POST",
             credentials: "include",
-            headers: { "Content-Type": "application/json" },
+            headers: { "Content-Type": "application/json",
+              "Authorization": `Bearer ${localStorage.getItem("token")}`,  // Add this
+             },
             body: JSON.stringify(postData),
           }
         );
